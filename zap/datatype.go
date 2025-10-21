@@ -9,7 +9,7 @@ import (
 	"github.com/project-chip/alchemy/matter/types"
 )
 
-var matterToZapMap = map[string]string{
+var MatterToZapMap = map[string]string{
 	"bool": "boolean",
 
 	"uint8":  "int8u",
@@ -105,8 +105,8 @@ var matterToZapMap = map[string]string{
 var zapToMatterMap map[string]string
 
 func init() {
-	zapToMatterMap = make(map[string]string, len(matterToZapMap))
-	for k, v := range matterToZapMap {
+	zapToMatterMap = make(map[string]string, len(MatterToZapMap))
+	for k, v := range MatterToZapMap {
 		zapToMatterMap[strings.ToLower(v)] = k
 	}
 }

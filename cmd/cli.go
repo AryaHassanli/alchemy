@@ -16,6 +16,7 @@ var commands struct {
 	Conformance cli.Conformance `cmd:"" help:"test conformance values"  group:"Spec Commands:"`
 	Dump        dump.Command    `cmd:"" hidden:"" help:"dump the parse tree of Matter documents specified by filename_pattern"`
 	DM          cli.DataModel   `cmd:"" help:"transmute the Matter spec into data model XML; optionally filtered to the files specified in filename_pattern" group:"SDK Commands:"`
+	MatterGen   cli.MatterGen   `cmd:"" name:"matter-gen" help:"transmute the Matter spec into data model .matter file"`
 	TestPlan    cli.TestPlan    `cmd:"" name:"test-plan" aliases:"testplan" help:"create an initial test plan from the spec, optionally filtered to the files specified in filename_pattern" group:"Testing Commands:"`
 	TestScript  cli.TestScript  `cmd:"" name:"test-script" aliases:"testscript" help:"create shell python scripts from the spec, optionally filtered to the files specified by filename_pattern" group:"Testing Commands:"`
 	Validate    cli.Validate    `cmd:"" help:"validate the Matter specification object model" group:"Spec Commands:"`
