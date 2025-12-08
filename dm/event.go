@@ -1,6 +1,7 @@
 package dm
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 
@@ -20,6 +21,18 @@ func renderEvents(es matter.EventSet, c *etree.Element) (err error) {
 		}
 		evs = append(evs, e)
 	}
+
+	/* TODO: Remove. Temporary workaround to output optional events */
+	for _, e := range es {
+		if conformance.IsOptional(e.Conformance) {
+			fmt.Printf("<%s,%s,%s,%s>\n",
+				e.Parent().(*matter.Cluster).ID.HexString(),
+				e.Parent().(*matter.Cluster).Name,
+				e.ID.HexString(),
+				e.Name)
+		}
+	}
+	/* END OF TODO: Remove. Temporary workaround to output optional events */
 
 	slices.SortStableFunc(evs, func(a, b *matter.Event) int {
 		return a.ID.Compare(b.ID)

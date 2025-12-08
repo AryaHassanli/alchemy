@@ -85,6 +85,10 @@ func IsRequired(conformance Conformance) bool {
 	return false
 }
 
+func IsOptional(conformance Conformance) bool {
+	return isOnly[*Optional](conformance)
+}
+
 func IsDeprecated(conformance Conformance) bool {
 	return isOnly[*Deprecated](conformance)
 }
