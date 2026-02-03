@@ -340,7 +340,7 @@ func addExtraTypes(extraTypes *errata.SDKTypes, entities []types.Entity) {
 		e.Type = types.ParseDataType(ee.Type, false)
 		e.Description = ee.Description
 		for _, ef := range ee.Fields {
-			ev := matter.NewEnumValue(nil, nil)
+			ev := matter.NewEnumValue(nil, e)
 			ev.Name = ef.Name
 			ev.Value = matter.ParseNumber(ef.Value)
 			e.Values = append(e.Values, ev)
@@ -352,7 +352,7 @@ func addExtraTypes(extraTypes *errata.SDKTypes, entities []types.Entity) {
 		s.Name = name
 		s.Description = es.Description
 		for i, ef := range es.Fields {
-			f := matter.NewField(nil, nil, types.EntityTypeStructField)
+			f := matter.NewField(nil, s, types.EntityTypeStructField)
 			f.ID = matter.NewNumber(uint64(i))
 			f.Name = ef.Name
 			f.Type = types.ParseDataType(ef.Type, ef.List)
