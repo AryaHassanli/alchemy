@@ -329,7 +329,7 @@ func addExtraTypes(extraTypes *errata.SDKTypes, entities []types.Entity) {
 		bm.Type = types.ParseDataType(typeName, false)
 		bm.Description = eb.Description
 		for _, ef := range eb.Fields {
-			b := matter.NewBitmapBit(nil, ef.Bit, ef.Name, "", nil)
+			b := matter.NewBitmapBit(nil, bm, ef.Bit, ef.Name, "", nil)
 			bm.Bits = append(bm.Bits, b)
 		}
 		extraEntities = append(extraEntities, bm)

@@ -127,8 +127,8 @@ func getGlobalTestEntites(entityType types.EntityType) (testEntities []types.Ent
 			Name: "TestGlobalBitmap",
 			Type: types.NewDataType(types.BaseDataTypeMap32, false),
 			Bits: matter.BitSet{
-				matter.NewBitmapBit(nil, "0x01", "FirstBit", "", nil),
-				matter.NewBitmapBit(nil, "0x02", "SecondBit", "", nil),
+				matter.NewBitmapBit(nil, nil, "0x01", "FirstBit", "", nil),
+				matter.NewBitmapBit(nil, nil, "0x02", "SecondBit", "", nil),
 			},
 		})
 	case types.EntityTypeEnum:
