@@ -471,7 +471,7 @@ func GetDataType(sectionInfoCache SectionInfoCache, reader asciidoc.Reader, doc 
 		}
 	}
 	if len(dts) > 0 {
-		return types.ParseDataType(dts, false), nil
+		return types.ParseDataType(dts, types.DataTypeRankScalar), nil
 	}
 	return nil, nil
 }

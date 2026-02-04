@@ -15,7 +15,7 @@ func applyErrataToEnum(en *matter.Enum, typeNames map[string]string, typeOverrid
 				en.Name = override.OverrideName
 			}
 			if override.OverrideType != "" {
-				en.Type = types.ParseDataType(override.OverrideType, false)
+				en.Type = types.ParseDataType(override.OverrideType, types.DataTypeRankScalar)
 			}
 			if len(override.Fields) == 0 {
 				return

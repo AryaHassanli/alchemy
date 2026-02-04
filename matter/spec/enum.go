@@ -25,7 +25,7 @@ func (library *Library) toEnum(reader asciidoc.Reader, d *asciidoc.Document, s *
 		return nil, newGenericParseError(s, "error parsing enum data type: %v", err)
 	}
 	if dt == nil {
-		dt = types.NewDataType(types.BaseDataTypeEnum8, false)
+		dt = types.NewDataType(types.BaseDataTypeEnum8, types.DataTypeRankScalar)
 		slog.Warn("Enum does not declare its derived data type; assuming enum8", log.Element("source", d.Path, s), slog.String("enum", name))
 	} else if !dt.IsEnum() {
 		return nil, newGenericParseError(s, "unknown enum data type: \"%s\"", dt.Name)
@@ -138,7 +138,7 @@ func (library *Library) toModeTags(reader asciidoc.Reader, d *asciidoc.Document,
 	}
 	e = matter.NewEnum(s, parent)
 	e.Name = "ModeTag"
-	e.Type = types.NewDataType(types.BaseDataTypeEnum16, false)
+	e.Type = types.NewDataType(types.BaseDataTypeEnum16, types.DataTypeRankScalar)
 	for row := range ti.ContentRows() {
 		ev := matter.NewEnumValue(s, e)
 		ev.Name, err = ti.ReadString(reader, row, matter.TableColumnName)

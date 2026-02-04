@@ -529,17 +529,17 @@ func simpleDataTypePattern(library *Library, doc *asciidoc.Document, row *asciid
 			return
 		}
 		var name string
-		var isArray bool
+		var rank types.DataTypeRank
 		var content = asteriskPattern.ReplaceAllString(el.Value, "")
 		match := listDataTypeDefinitionPattern.FindStringSubmatch(content)
 		if match != nil {
 			name = match[1]
-			isArray = true
+			rank = types.DataTypeRankList
 		} else {
 			name = content
 		}
 
-		dt = types.ParseDataType(name, isArray)
+		dt = types.ParseDataType(name, rank)
 		if dt == nil {
 			slog.Warn("unable to parse data type", slog.String("dataType", el.Value), log.Path("source", row))
 		}
@@ -575,7 +575,7 @@ func listDataTypePattern(library *Library, doc *asciidoc.Document, row *asciidoc
 			match := listDataTypeEntryPattern.FindStringSubmatch(content)
 			if match != nil {
 				name = match[1]
-				dt = types.ParseDataType(name, true)
+				dt = types.ParseDataType(name, types.DataTypeRankList)
 				if dt == nil {
 					slog.Warn("unable to parse data type", slog.String("dataType", el.Value), log.Path("source", row))
 				}
@@ -592,7 +592,7 @@ func listDataTypePattern(library *Library, doc *asciidoc.Document, row *asciidoc
 		}
 		switch el := elements[1].(type) {
 		case *asciidoc.String:
-			dt = types.ParseDataType(el.Value, true)
+			dt = types.ParseDataType(el.Value, types.DataTypeRankList)
 		case *asciidoc.CrossReference:
 			return library.crossReferenceToDataType(doc, el, true), false
 		default:
@@ -618,7 +618,7 @@ func listDataTypePattern(library *Library, doc *asciidoc.Document, row *asciidoc
 
 		switch el := elements[2].(type) {
 		case *asciidoc.String:
-			dt = types.ParseDataType(el.Value, true)
+			dt = types.ParseDataType(el.Value, types.DataTypeRankList)
 		case *asciidoc.CrossReference:
 			listType.EntryType = library.crossReferenceToDataType(doc, el, false)
 			dt = listType

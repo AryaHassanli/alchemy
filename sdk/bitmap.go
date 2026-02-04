@@ -15,7 +15,7 @@ func applyErrataToBitmap(bitmap *matter.Bitmap, typeNames map[string]string, typ
 				bitmap.Name = override.OverrideName
 			}
 			if override.OverrideType != "" {
-				bitmap.Type = types.ParseDataType(override.OverrideType, false)
+				bitmap.Type = types.ParseDataType(override.OverrideType, types.DataTypeRankScalar)
 			}
 			if len(override.Fields) == 0 {
 				return

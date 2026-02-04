@@ -41,7 +41,7 @@ func applyErrataToField(field *matter.Field, override *errata.SDKType) {
 		field.Name = override.OverrideName
 	}
 	if override.OverrideType != "" {
-		field.Type = types.ParseDataType(override.OverrideType, false)
+		field.Type = types.ParseDataType(override.OverrideType, types.DataTypeRankScalar)
 	}
 	if override.Conformance != "" {
 		field.Conformance = conformance.ParseConformance(override.Conformance)

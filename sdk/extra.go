@@ -28,7 +28,7 @@ func addExtraTypes(extraTypes *errata.SDKTypes, entities []types.Entity) {
 		case "bitmap64":
 			typeName = "map64"
 		}
-		bm.Type = types.ParseDataType(typeName, false)
+		bm.Type = types.ParseDataType(typeName, types.DataTypeRankScalar)
 		bm.Description = eb.Description
 		for _, ef := range eb.Fields {
 			b := matter.NewBitmapBit(nil, bm, ef.Bit, ef.Name, "", nil)
@@ -39,7 +39,7 @@ func addExtraTypes(extraTypes *errata.SDKTypes, entities []types.Entity) {
 	for name, ee := range extraTypes.Enums {
 		e := matter.NewEnum(nil, nil)
 		e.Name = name
-		e.Type = types.ParseDataType(ee.Type, false)
+		e.Type = types.ParseDataType(ee.Type, types.DataTypeRankScalar)
 		e.Description = ee.Description
 		for _, ef := range ee.Fields {
 			ev := matter.NewEnumValue(nil, e)
@@ -57,7 +57,11 @@ func addExtraTypes(extraTypes *errata.SDKTypes, entities []types.Entity) {
 			f := matter.NewField(nil, s, types.EntityTypeStructField)
 			f.ID = matter.NewNumber(uint64(i))
 			f.Name = ef.Name
-			f.Type = types.ParseDataType(ef.Type, ef.List)
+			var rank types.DataTypeRank
+			if ef.List {
+				rank = types.DataTypeRankList
+			}
+			f.Type = types.ParseDataType(ef.Type, rank)
 			if ef.Constraint != "" {
 				f.Constraint = constraint.ParseString(ef.Constraint)
 			}
