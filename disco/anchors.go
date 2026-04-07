@@ -275,7 +275,9 @@ func normalizeAnchorLabel(name string, element any) (label asciidoc.Elements) {
 	case *asciidoc.Table:
 		label = asciidoc.Elements{asciidoc.NewString(strings.TrimSpace(name))}
 	default:
-		name = text.TrimCaseInsensitiveSuffix(name, " Type")
+		if !text.HasCaseInsensitiveSuffix(name, " Device Type") {
+			name = text.TrimCaseInsensitiveSuffix(name, " Type")
+		}
 		label = asciidoc.Elements{asciidoc.NewString(strings.TrimSpace(matter.StripReferenceSuffixes(name)))}
 	}
 	return
