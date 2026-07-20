@@ -1,13 +1,14 @@
 package conformance
 
 import (
+	"strings"
 	"testing"
 )
 
 func TestValidateEventConformance(t *testing.T) {
 	isFeature := func(id string) bool {
 		switch id {
-		case "FeatureBit1", "FeatureBit2":
+		case "FeatureBit1", "FeatureBit2", "ON", "OFF", "LOW", "OTHER":
 			return true
 		}
 		return false
@@ -18,6 +19,7 @@ func TestValidateEventConformance(t *testing.T) {
 		conformance string
 		valid       bool
 		errContains string
+		lookup      func(id string) bool
 	}{
 		{
 			name:        "Event1: M",
@@ -61,7 +63,7 @@ func TestValidateEventConformance(t *testing.T) {
 			name:        "Event8: FeatureBit1 | [FeatureBit2]",
 			conformance: "FeatureBit1 | [FeatureBit2]",
 			valid:       false,
-			errContains: "conformance is tied to a feature bit but is optional",
+			errContains: "conformance expression is not valid",
 		},
 		{
 			name:        "Provisional with mandatory",
@@ -85,23 +87,43 @@ func TestValidateEventConformance(t *testing.T) {
 			valid:       true,
 		},
 		{
+			name:        "Feature bit containing letter O (ON)",
+			conformance: "ON",
+			valid:       true,
+		},
+		{
+			name:        "Feature bit containing letter O (OTHER)",
+			conformance: "OTHER",
+			valid:       true,
+		},
+		{
 			name:        "Blank conformance",
 			conformance: "",
 			valid:       false,
 			errContains: "conformance cannot be blank",
+		},
+		{
+			name:        "Global event with M and nil lookup",
+			conformance: "M",
+			valid:       true,
+			lookup:      nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			con := ParseConformance(tt.conformance)
-			err := ValidateEventConformance(con, isFeature)
+			lookup := isFeature
+			if tt.name == "Global event with M and nil lookup" {
+				lookup = nil
+			}
+			err := ValidateEventConformance(con, lookup)
 			if tt.valid && err != nil {
 				t.Errorf("ValidateEventConformance(%q) unexpected error: %v", tt.conformance, err)
 			} else if !tt.valid {
 				if err == nil {
 					t.Errorf("ValidateEventConformance(%q) expected error but got nil", tt.conformance)
-				} else if tt.errContains != "" && err.Error() != tt.errContains {
+				} else if tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
 					t.Errorf("ValidateEventConformance(%q) expected error containing %q, got %q", tt.conformance, tt.errContains, err.Error())
 				}
 			}

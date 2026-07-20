@@ -212,7 +212,7 @@ func validateEvents(spec *Specification) {
 		case *matter.Event:
 			idu.check(spec, e.ID, e)
 			nu.check(spec, e)
-			if err := conformance.ValidateEventConformance(e.Conformance); err != nil {
+			if err := conformance.ValidateEventConformance(e.Conformance, nil); err != nil {
 				spec.addError(&InvalidEventConformanceError{Event: e, Conformance: e.Conformance, Reason: err.Error()})
 			}
 			validateFields(spec, e, e.Fields)
