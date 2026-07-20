@@ -55,6 +55,7 @@ const (
 	ErrorTypeInvalidFallback
 	ErrorTypeConformanceChoiceOrphan
 	ErrorTypeConformanceChoiceMismatch
+	ErrorTypeInvalidEventConformance
 )
 
 type Error interface {
@@ -794,3 +795,35 @@ func (mcee *MissingClonedEntityError) Origin() (path string, line int) {
 func (mcee *MissingClonedEntityError) Error() string {
 	return fmt.Sprintf("failed to find local clone of entity %s for field %s", matter.EntityName(mcee.Entity), mcee.Field.Name)
 }
+
+type InvalidEventConformanceError struct {
+	Event       *matter.Event
+	Conformance conformance.Conformance
+	Reason      string
+}
+
+func (ie *InvalidEventConformanceError) Type() ErrorType {
+	return ErrorTypeInvalidEventConformance
+}
+
+func (ie *InvalidEventConformanceError) Origin() (path string, line int) {
+	if ie.Event != nil {
+		return ie.Event.Origin()
+	}
+	return "", 0
+}
+
+func (ie *InvalidEventConformanceError) Error() string {
+	if ie.Conformance != nil {
+		return fmt.Sprintf("%s (%s)", ie.Conformance.ASCIIDocString(), ie.Reason)
+	}
+	if ie.Event != nil && ie.Event.Conformance != nil {
+		return fmt.Sprintf("%s (%s)", ie.Event.Conformance.ASCIIDocString(), ie.Reason)
+	}
+	return ie.Reason
+}
+
+func (ie *InvalidEventConformanceError) ComparableEntity() types.Entity {
+	return ie.Event
+}
+
