@@ -19,6 +19,7 @@ func ValidateEventConformance(con Conformance, isFeature func(id string) bool) e
 	var nonAnnotations []Conformance
 	switch c := con.(type) {
 	case Set:
+		nonAnnotations = make([]Conformance, 0, len(c))
 		for _, el := range c {
 			if !isAnnotation(el) {
 				nonAnnotations = append(nonAnnotations, el)
@@ -126,6 +127,9 @@ func ComparisonValueReferencesFeature(val ComparisonValue, lookup func(id string
 		if lookup != nil && lookup(v.ID) {
 			return true
 		}
+		if v.Field != nil {
+			return ComparisonValueReferencesFeature(v.Field, lookup)
+		}
 	case *ReferenceValue:
 		if v.Entity != nil && v.Entity.EntityType() == types.EntityTypeFeature {
 			return true
@@ -133,6 +137,11 @@ func ComparisonValueReferencesFeature(val ComparisonValue, lookup func(id string
 		if lookup != nil && lookup(v.Reference) {
 			return true
 		}
+		if v.Field != nil {
+			return ComparisonValueReferencesFeature(v.Field, lookup)
+		}
+	case *MathOperation:
+		return ComparisonValueReferencesFeature(v.Left, lookup) || ComparisonValueReferencesFeature(v.Right, lookup)
 	}
 	return false
 }

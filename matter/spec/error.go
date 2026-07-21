@@ -802,18 +802,18 @@ type InvalidEventConformanceError struct {
 	Reason      string
 }
 
-func (ie *InvalidEventConformanceError) Type() ErrorType {
+func (ie InvalidEventConformanceError) Type() ErrorType {
 	return ErrorTypeInvalidEventConformance
 }
 
-func (ie *InvalidEventConformanceError) Origin() (path string, line int) {
+func (ie InvalidEventConformanceError) Origin() (path string, line int) {
 	if ie.Event != nil {
 		return ie.Event.Origin()
 	}
 	return "", 0
 }
 
-func (ie *InvalidEventConformanceError) Error() string {
+func (ie InvalidEventConformanceError) Error() string {
 	if ie.Conformance != nil {
 		return fmt.Sprintf("%s (%s)", ie.Conformance.ASCIIDocString(), ie.Reason)
 	}
@@ -823,7 +823,7 @@ func (ie *InvalidEventConformanceError) Error() string {
 	return ie.Reason
 }
 
-func (ie *InvalidEventConformanceError) ComparableEntity() types.Entity {
+func (ie InvalidEventConformanceError) ComparableEntity() types.Entity {
 	return ie.Event
 }
 

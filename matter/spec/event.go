@@ -191,7 +191,7 @@ func validateEvents(spec *Specification) {
 		if c.Features != nil {
 			isFeature = func(id string) bool {
 				ent, ok := c.Features.Identifier(id)
-				return ok && ent.EntityType() == types.EntityTypeFeature
+				return ok && ent != nil && ent.EntityType() == types.EntityTypeFeature
 			}
 		}
 		for _, e := range c.Events {

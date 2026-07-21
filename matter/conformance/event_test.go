@@ -66,6 +66,22 @@ func TestValidateEventConformance(t *testing.T) {
 			errContains: "conformance expression is not valid",
 		},
 		{
+			name:        "Event9: [Attribute1 & FeatureBit1]",
+			conformance: "[Attribute1 & FeatureBit1]",
+			valid:       false,
+			errContains: "conformance is tied to a feature bit but is optional",
+		},
+		{
+			name:        "Event10: Parentheses (FeatureBit1)",
+			conformance: "(FeatureBit1)",
+			valid:       true,
+		},
+		{
+			name:        "Event11: Logical NOT !FeatureBit1",
+			conformance: "!FeatureBit1",
+			valid:       true,
+		},
+		{
 			name:        "Provisional with mandatory",
 			conformance: "P, M",
 			valid:       true,
