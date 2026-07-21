@@ -39,7 +39,8 @@ func TestValidateEventConformance(t *testing.T) {
 		{
 			name:        "Event4: Attribute1 & FeatureBit1",
 			conformance: "Attribute1 & FeatureBit1",
-			valid:       true,
+			valid:       false,
+			errContains: "conformance is not tied to a feature bit",
 		},
 		{
 			name:        "Event5: O",

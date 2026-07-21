@@ -41,7 +41,8 @@ func ValidateEventConformance(con Conformance, isFeature func(id string) bool) e
 			if c.Expression == nil && c.Choice == nil {
 				return errors.New("conformance is purely optional")
 			}
-			if c.Expression != nil && ExpressionReferencesFeature(c.Expression, isFeature) {
+			hasFeature, _ := inspectFeatures(c.Expression, isFeature)
+			if hasFeature {
 				return errors.New("conformance is tied to a feature bit but is optional")
 			}
 			return errors.New("conformance could be optional")
@@ -50,7 +51,8 @@ func ValidateEventConformance(con Conformance, isFeature func(id string) bool) e
 			if c.Expression == nil {
 				continue
 			}
-			if !ExpressionReferencesFeature(c.Expression, isFeature) {
+			hasFeature, hasNonFeature := inspectFeatures(c.Expression, isFeature)
+			if !hasFeature || hasNonFeature {
 				return errors.New("conformance is not tied to a feature bit")
 			}
 
@@ -74,74 +76,56 @@ func isAnnotation(con Conformance) bool {
 }
 
 func ExpressionReferencesFeature(exp Expression, lookup func(id string) bool) bool {
-	if exp == nil {
-		return false
-	}
-	switch e := exp.(type) {
-	case *IdentifierExpression:
-		if e.Entity != nil && e.Entity.EntityType() == types.EntityTypeFeature {
-			return true
-		}
-		if lookup != nil && lookup(e.ID) {
-			return true
-		}
-		if e.Field != nil {
-			return ComparisonValueReferencesFeature(e.Field, lookup)
-		}
-	case *ReferenceExpression:
-		if e.Entity != nil && e.Entity.EntityType() == types.EntityTypeFeature {
-			return true
-		}
-		if lookup != nil && lookup(e.Reference) {
-			return true
-		}
-		if e.Field != nil {
-			return ComparisonValueReferencesFeature(e.Field, lookup)
-		}
-	case *LogicalExpression:
-		if ExpressionReferencesFeature(e.Left, lookup) {
-			return true
-		}
-		for _, r := range e.Right {
-			if ExpressionReferencesFeature(r, lookup) {
-				return true
-			}
-		}
-	case *EqualityExpression:
-		return ExpressionReferencesFeature(e.Left, lookup) || ExpressionReferencesFeature(e.Right, lookup)
-	case *ComparisonExpression:
-		return ComparisonValueReferencesFeature(e.Left, lookup) || ComparisonValueReferencesFeature(e.Right, lookup)
-	}
-	return false
+	hasFeature, _ := inspectFeatures(exp, lookup)
+	return hasFeature
 }
 
-func ComparisonValueReferencesFeature(val ComparisonValue, lookup func(id string) bool) bool {
-	if val == nil {
-		return false
+func inspectFeatures(node any, isFeature func(id string) bool) (hasFeature, hasNonFeature bool) {
+	if node == nil {
+		return false, false
 	}
-	switch v := val.(type) {
+	switch n := node.(type) {
+	case *IdentifierExpression:
+		return checkIdentifier(n.Entity, n.ID, n.Field, isFeature)
+	case *ReferenceExpression:
+		return checkIdentifier(n.Entity, n.Reference, n.Field, isFeature)
 	case *IdentifierValue:
-		if v.Entity != nil && v.Entity.EntityType() == types.EntityTypeFeature {
-			return true
-		}
-		if lookup != nil && lookup(v.ID) {
-			return true
-		}
-		if v.Field != nil {
-			return ComparisonValueReferencesFeature(v.Field, lookup)
-		}
+		return checkIdentifier(n.Entity, n.ID, n.Field, isFeature)
 	case *ReferenceValue:
-		if v.Entity != nil && v.Entity.EntityType() == types.EntityTypeFeature {
-			return true
+		return checkIdentifier(n.Entity, n.Reference, n.Field, isFeature)
+	case *LogicalExpression:
+		hasFeature, hasNonFeature = inspectFeatures(n.Left, isFeature)
+		for _, r := range n.Right {
+			rFeat, rNon := inspectFeatures(r, isFeature)
+			hasFeature = hasFeature || rFeat
+			hasNonFeature = hasNonFeature || rNon
 		}
-		if lookup != nil && lookup(v.Reference) {
-			return true
-		}
-		if v.Field != nil {
-			return ComparisonValueReferencesFeature(v.Field, lookup)
-		}
+	case *EqualityExpression:
+		lFeat, lNon := inspectFeatures(n.Left, isFeature)
+		rFeat, rNon := inspectFeatures(n.Right, isFeature)
+		return lFeat || rFeat, lNon || rNon
+	case *ComparisonExpression:
+		lFeat, lNon := inspectFeatures(n.Left, isFeature)
+		rFeat, rNon := inspectFeatures(n.Right, isFeature)
+		return lFeat || rFeat, lNon || rNon
 	case *MathOperation:
-		return ComparisonValueReferencesFeature(v.Left, lookup) || ComparisonValueReferencesFeature(v.Right, lookup)
+		lFeat, lNon := inspectFeatures(n.Left, isFeature)
+		rFeat, rNon := inspectFeatures(n.Right, isFeature)
+		return lFeat || rFeat, lNon || rNon
 	}
-	return false
+	return hasFeature, hasNonFeature
+}
+
+func checkIdentifier(entity types.Entity, id string, field ComparisonValue, isFeature func(string) bool) (hasFeature, hasNonFeature bool) {
+	if (entity != nil && entity.EntityType() == types.EntityTypeFeature) || (isFeature != nil && isFeature(id)) {
+		hasFeature = true
+	} else {
+		hasNonFeature = true
+	}
+	if field != nil {
+		fFeat, fNon := inspectFeatures(field, isFeature)
+		hasFeature = hasFeature || fFeat
+		hasNonFeature = hasNonFeature || fNon
+	}
+	return hasFeature, hasNonFeature
 }

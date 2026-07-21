@@ -195,27 +195,25 @@ func validateEvents(spec *Specification) {
 			}
 		}
 		for _, e := range c.Events {
-			idu.check(spec, e.ID, e)
-			nu.check(spec, e)
 			cv.add(e, e.Conformance)
-			if err := conformance.ValidateEventConformance(e.Conformance, isFeature); err != nil {
-				spec.addError(&InvalidEventConformanceError{Event: e, Conformance: e.Conformance, Reason: err.Error()})
-			}
-			validateFields(spec, e, e.Fields)
+			validateEvent(spec, e, isFeature, idu, nu)
 		}
 		cv.check(spec)
 	}
 	idu := make(idUniqueness[*matter.Event])
 	nu := make(nameUniqueness[*matter.Event])
 	for obj := range spec.GlobalObjects {
-		switch e := obj.(type) {
-		case *matter.Event:
-			idu.check(spec, e.ID, e)
-			nu.check(spec, e)
-			if err := conformance.ValidateEventConformance(e.Conformance, nil); err != nil {
-				spec.addError(&InvalidEventConformanceError{Event: e, Conformance: e.Conformance, Reason: err.Error()})
-			}
-			validateFields(spec, e, e.Fields)
+		if e, ok := obj.(*matter.Event); ok {
+			validateEvent(spec, e, nil, idu, nu)
 		}
 	}
+}
+
+func validateEvent(spec *Specification, e *matter.Event, isFeature func(id string) bool, idu idUniqueness[*matter.Event], nu nameUniqueness[*matter.Event]) {
+	idu.check(spec, e.ID, e)
+	nu.check(spec, e)
+	if err := conformance.ValidateEventConformance(e.Conformance, isFeature); err != nil {
+		spec.addError(&InvalidEventConformanceError{Event: e, Conformance: e.Conformance, Reason: err.Error()})
+	}
+	validateFields(spec, e, e.Fields)
 }
