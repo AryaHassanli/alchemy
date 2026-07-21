@@ -23,7 +23,7 @@ func commandsHelper(spec *spec.Specification, filter ProvisionalFilter) func(com
 		serverCommandIDs := make(map[string]*matter.Number)
 		for _, c := range sortedCommands {
 			if c.Direction == matter.InterfaceServer && c.Response != nil && c.Response.Name != "" && c.ID.Valid() {
-				if existing, exists := serverCommandIDs[c.Response.Name]; !exists || (existing.Valid() && c.ID.Compare(existing) < 0) {
+				if existing, exists := serverCommandIDs[c.Response.Name]; !exists || c.ID.Compare(existing) < 0 {
 					serverCommandIDs[c.Response.Name] = c.ID
 				}
 			}
