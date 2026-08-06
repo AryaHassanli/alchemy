@@ -211,12 +211,15 @@ func applyErrataToEvent(ev *matter.Event, typeNames map[string]string, typeOverr
 }
 
 func applyErrataToDeviceType(deviceType *matter.DeviceType, typeOverrides *errata.SDKTypes) {
-	override, ok := typeOverrides.DeviceTypes[deviceType.Name]
-	if !ok {
+	if typeOverrides == nil || typeOverrides.DeviceTypes == nil {
 		return
 	}
-	if override.OverrideName != "" {
-		deviceType.Name = override.OverrideName
+	override, ok := typeOverrides.DeviceTypes[deviceType.Name]
+	if !ok || override == nil {
+		return
+	}
+	if override.OverrideProfileID != "" {
+		deviceType.ProfileID = override.OverrideProfileID
 	}
 }
 

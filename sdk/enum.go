@@ -10,7 +10,7 @@ import (
 func applyErrataToEnum(en *matter.Enum, typeNames map[string]string, typeOverrides *errata.SDKTypes) {
 	if typeOverrides != nil {
 		override, ok := typeOverrides.Enums[en.Name]
-		if ok {
+		if ok && override != nil {
 			if override.OverrideName != "" {
 				en.Name = override.OverrideName
 			}

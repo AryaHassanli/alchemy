@@ -13,7 +13,7 @@ func applyErrataToBitmap(bitmap *matter.Bitmap, typeNames map[string]string, typ
 	if typeOverrides != nil {
 		override, ok := typeOverrides.Bitmaps[bitmap.Name]
 
-		if ok {
+		if ok && override != nil {
 			applyBitmapOverride(bitmap, override)
 		}
 	}
@@ -21,6 +21,9 @@ func applyErrataToBitmap(bitmap *matter.Bitmap, typeNames map[string]string, typ
 }
 
 func applyBitmapOverride(bitmap *matter.Bitmap, override *errata.SDKType) {
+	if override == nil {
+		return
+	}
 	if override.OverrideName != "" {
 		bitmap.Name = override.OverrideName
 	}

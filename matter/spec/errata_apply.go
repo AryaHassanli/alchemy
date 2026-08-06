@@ -32,7 +32,7 @@ func applySdkErrata(spec *Specification) {
 
 		// Process ForceLocal / Keep
 		for name, entry := range errata.SDK.Types.Enums {
-			if entry.ForceLocal || entry.Keep {
+			if entry != nil && (entry.ForceLocal || entry.Keep) {
 				if en, ok := globalEnums[name]; ok {
 					exists := false
 					for _, existing := range originalC.Enums {
@@ -48,7 +48,7 @@ func applySdkErrata(spec *Specification) {
 			}
 		}
 		for name, entry := range errata.SDK.Types.Bitmaps {
-			if entry.ForceLocal || entry.Keep {
+			if entry != nil && (entry.ForceLocal || entry.Keep) {
 				if bm, ok := globalBitmaps[name]; ok {
 					exists := false
 					for _, existing := range originalC.Bitmaps {
@@ -64,7 +64,7 @@ func applySdkErrata(spec *Specification) {
 			}
 		}
 		for name, entry := range errata.SDK.Types.Structs {
-			if entry.ForceLocal || entry.Keep {
+			if entry != nil && (entry.ForceLocal || entry.Keep) {
 				if st, ok := globalStructs[name]; ok {
 					exists := false
 					for _, existing := range originalC.Structs {
@@ -82,7 +82,7 @@ func applySdkErrata(spec *Specification) {
 
 		// Process ForceGlobal
 		for name, entry := range errata.SDK.Types.Enums {
-			if entry.ForceGlobal {
+			if entry != nil && entry.ForceGlobal {
 				for i, existing := range originalC.Enums {
 					if existing.Name == name {
 						originalC.Enums = append(originalC.Enums[:i], originalC.Enums[i+1:]...)
@@ -94,7 +94,7 @@ func applySdkErrata(spec *Specification) {
 			}
 		}
 		for name, entry := range errata.SDK.Types.Bitmaps {
-			if entry.ForceGlobal {
+			if entry != nil && entry.ForceGlobal {
 				for i, existing := range originalC.Bitmaps {
 					if existing.Name == name {
 						originalC.Bitmaps = append(originalC.Bitmaps[:i], originalC.Bitmaps[i+1:]...)
@@ -106,7 +106,7 @@ func applySdkErrata(spec *Specification) {
 			}
 		}
 		for name, entry := range errata.SDK.Types.Structs {
-			if entry.ForceGlobal {
+			if entry != nil && entry.ForceGlobal {
 				for i, existing := range originalC.Structs {
 					if existing.Name == name {
 						originalC.Structs = append(originalC.Structs[:i], originalC.Structs[i+1:]...)
