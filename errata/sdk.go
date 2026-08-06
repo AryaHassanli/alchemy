@@ -87,14 +87,15 @@ type SDKTypes struct {
 }
 
 type SDKType struct {
-	Type         string `yaml:"type,omitempty"`
-	Name         string `yaml:"name,omitempty"`
-	OverrideName string `yaml:"override-name,omitempty"`
-	OverrideType string `yaml:"override-type,omitempty"`
-	List         bool   `yaml:"list,omitempty"`
-	Keep         bool   `yaml:"keep,omitempty"`
-	ForceGlobal  bool   `yaml:"force-global,omitempty"`
-	ForceLocal   bool   `yaml:"force-local,omitempty"`
+	Type              string `yaml:"type,omitempty"`
+	Name              string `yaml:"name,omitempty"`
+	OverrideName      string `yaml:"override-name,omitempty"`
+	OverrideType      string `yaml:"override-type,omitempty"`
+	OverrideProfileID string `yaml:"override-profile-id,omitempty"`
+	List              bool   `yaml:"list,omitempty"`
+	Keep              bool   `yaml:"keep,omitempty"`
+	ForceGlobal       bool   `yaml:"force-global,omitempty"`
+	ForceLocal        bool   `yaml:"force-local,omitempty"`
 
 	Fields      []*SDKType `yaml:"fields,omitempty"`
 	ExtraFields []*SDKType `yaml:"extra-fields,omitempty"`
@@ -129,7 +130,7 @@ func (zap *SDK) OverrideDeviceTypeName(deviceType *matter.DeviceType, defaultNam
 		return defaultName
 	}
 	if zap.Types.DeviceTypes != nil {
-		if override, ok := zap.Types.DeviceTypes[deviceType.Name]; ok && override.OverrideName != "" {
+		if override, ok := zap.Types.DeviceTypes[deviceType.Name]; ok && override != nil && override.OverrideName != "" {
 			return override.OverrideName
 		}
 	}
@@ -141,7 +142,7 @@ func (zap *SDK) OverrideDeviceType(deviceType *matter.DeviceType, defaultTypeNam
 		return defaultTypeName
 	}
 	if zap.Types.DeviceTypes != nil {
-		if override, ok := zap.Types.DeviceTypes[deviceType.Name]; ok && override.OverrideType != "" {
+		if override, ok := zap.Types.DeviceTypes[deviceType.Name]; ok && override != nil && override.OverrideType != "" {
 			return override.OverrideType
 		}
 	}
