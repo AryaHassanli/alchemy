@@ -126,7 +126,7 @@ type SDKType struct {
 type SDKTypeCollection map[string]*SDKType
 
 func (zap *SDK) OverrideDeviceTypeName(deviceType *matter.DeviceType, defaultName string) string {
-	if zap.Types == nil {
+	if zap == nil || zap.Types == nil {
 		return defaultName
 	}
 	if zap.Types.DeviceTypes != nil {
@@ -138,7 +138,7 @@ func (zap *SDK) OverrideDeviceTypeName(deviceType *matter.DeviceType, defaultNam
 }
 
 func (zap *SDK) OverrideDeviceType(deviceType *matter.DeviceType, defaultTypeName string) string {
-	if zap.Types == nil {
+	if zap == nil || zap.Types == nil {
 		return defaultTypeName
 	}
 	if zap.Types.DeviceTypes != nil {

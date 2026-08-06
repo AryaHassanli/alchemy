@@ -114,7 +114,7 @@ func caseify(s string, separator rune, startWithCapital bool, preserveAcronyms b
 			continue
 		} else if unicode.IsLower(r) {
 			if upperCaseNextRune {
-				if separator != 0 {
+				if separator != 0 && len(b) > 0 {
 					b = utf8.AppendRune(b, separator)
 				}
 				b = utf8.AppendRune(b, unicode.ToUpper(r))

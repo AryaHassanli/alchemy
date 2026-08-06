@@ -33,7 +33,7 @@ type DeviceTypesPatcher struct {
 
 func NewDeviceTypesPatcher(sdkRoot string, spec *spec.Specification, clusterAliases pipeline.Map[string, []string], options TemplateOptions) *DeviceTypesPatcher {
 	dtp := &DeviceTypesPatcher{sdkRoot: sdkRoot, spec: spec, options: options, clusterAliases: make(map[string]string)}
-	if spec.Root != "" {
+	if spec != nil && spec.Root != "" {
 		var err error
 		dtp.specVersion, err = vcs.GitDescribe(spec.Root)
 		if err != nil {
