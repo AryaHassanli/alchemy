@@ -41,5 +41,6 @@ func ClusterName(path string, errata *errata.SDK, entities []types.Entity) strin
 
 func DeviceTypeName(deviceType *matter.DeviceType, errata *errata.SDK) string {
 	name := matter.CaseWithSeparator(deviceType.Name, '-')
-	return errata.OverrideDeviceTypeName(deviceType, "MA-"+strings.ToLower(name))
+	name = strings.TrimPrefix(strings.ToLower(name), "ma-")
+	return errata.OverrideDeviceTypeName(deviceType, "MA-"+name)
 }

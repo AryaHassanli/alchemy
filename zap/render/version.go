@@ -116,8 +116,12 @@ func (cr *configuratorRenderer) patchAlchemyComment(configurator *zap.Configurat
 
 	var args []string
 	for _, arg := range os.Args[1:] {
+		if strings.HasSuffix(arg, ".adoc") {
+			continue
+		}
 		args = append(args, strings.TrimPrefix(arg, "--"))
 	}
+
 	err := alchemyCommentTemplate.Execute(&alchemyCommentText, struct {
 		Path       string
 		Parameters []string

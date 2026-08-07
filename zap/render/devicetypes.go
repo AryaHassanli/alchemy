@@ -11,10 +11,13 @@ import (
 	"github.com/beevik/etree"
 	"github.com/project-chip/alchemy/asciidoc"
 	"github.com/project-chip/alchemy/internal/pipeline"
+	"github.com/project-chip/alchemy/internal/vcs"
 	"github.com/project-chip/alchemy/internal/xml"
+
 	"github.com/project-chip/alchemy/matter"
 	"github.com/project-chip/alchemy/matter/spec"
 	"github.com/project-chip/alchemy/matter/types"
+	"github.com/project-chip/alchemy/zap"
 )
 
 var utilityDevicesMask uint64 = 0xFF000000
@@ -22,6 +25,7 @@ var utilityDevicesMask uint64 = 0xFF000000
 type DeviceTypesPatcher struct {
 	sdkRoot        string
 	spec           *spec.Specification
+	specVersion    string
 	clusterAliases map[string]string
 
 	options TemplateOptions
@@ -29,6 +33,13 @@ type DeviceTypesPatcher struct {
 
 func NewDeviceTypesPatcher(sdkRoot string, spec *spec.Specification, clusterAliases pipeline.Map[string, []string], options TemplateOptions) *DeviceTypesPatcher {
 	dtp := &DeviceTypesPatcher{sdkRoot: sdkRoot, spec: spec, options: options, clusterAliases: make(map[string]string)}
+	if spec != nil && spec.Root != "" {
+		var err error
+		dtp.specVersion, err = vcs.GitDescribe(spec.Root)
+		if err != nil {
+			slog.Error("Unable to determine spec git tag", slog.Any("error", err))
+		}
+	}
 	clusterAliases.Range(func(cluster string, aliases []string) bool {
 		for _, alias := range aliases {
 			dtp.clusterAliases[alias] = cluster
@@ -238,6 +249,22 @@ func (p DeviceTypesPatcher) Process(cxt context.Context, inputs []*pipeline.Data
 		if err != nil {
 			return
 		}
+	}
+
+	var allDocs []*asciidoc.Document
+	for _, input := range inputs {
+		allDocs = append(allDocs, input.Content)
+	}
+	zapConfigurator := &zap.Configurator{
+		Docs:    allDocs,
+		OutPath: deviceTypesXMLPath,
+	}
+	cr := &configuratorRenderer{
+		generator: &TemplateGenerator{specVersion: p.specVersion},
+	}
+	err = cr.patchComments(zapConfigurator, doc)
+	if err != nil {
+		return
 	}
 
 	var out string

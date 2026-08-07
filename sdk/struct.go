@@ -83,6 +83,9 @@ func applyErrataToFields(fs matter.FieldSet, override *errata.SDKType) error {
 }
 
 func applyErrataToField(field *matter.Field, override *errata.SDKType) error {
+	if override == nil {
+		return nil
+	}
 	if override.OverrideName != "" {
 		field.Name = override.OverrideName
 	}

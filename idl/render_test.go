@@ -8,6 +8,7 @@ import (
 	"github.com/project-chip/alchemy/internal/pipeline"
 	"github.com/project-chip/alchemy/matter"
 	"github.com/project-chip/alchemy/matter/conformance"
+	"github.com/project-chip/alchemy/matter/constraint"
 	"github.com/project-chip/alchemy/matter/spec"
 	"github.com/project-chip/alchemy/matter/types"
 )
@@ -383,5 +384,244 @@ func TestGetClusterFileName(t *testing.T) {
 				t.Errorf("getClusterFileName(%q) = %q, want %q", tt.input, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestCommandResponseSorting(t *testing.T) {
+	specification := &spec.Specification{
+		ClustersByID:    make(map[uint64]*matter.Cluster),
+		ClustersByName:  make(map[string]*matter.Cluster),
+		DeviceTypesByID: make(map[uint64]*matter.DeviceType),
+		DataTypeRefs:    spec.NewEntityRefs[types.Entity](),
+		ClusterRefs:     spec.NewEntityRefs[*matter.Cluster](),
+	}
+
+	specification.DeviceTypesByID[1] = &matter.DeviceType{
+		Name: "Test Device Type",
+		ID:   matter.NewNumber(1),
+	}
+
+	cluster := matter.NewCluster(nil)
+	cluster.Name = "TestCluster"
+	cluster.ID = matter.NewNumber(1)
+	cluster.Conformance = conformance.Set{&conformance.Mandatory{}}
+
+	specification.ClustersByID[1] = cluster
+	specification.ClustersByName["TestCluster"] = cluster
+
+	provCmd0 := &matter.Command{
+		Name:        "ProvCmdZero",
+		ID:          matter.NewNumber(0),
+		Direction:   matter.InterfaceServer,
+		Response:    types.NewCustomDataType("SharedResponse", types.DataTypeRankScalar),
+		Conformance: conformance.Set{&conformance.Provisional{}},
+		Fields: matter.FieldSet{
+			&matter.Field{
+				Name:        "Arg0",
+				ID:          matter.NewNumber(1),
+				Type:        types.NewDataType(types.BaseDataTypeUInt8, types.DataTypeRankScalar),
+				Conformance: conformance.Set{&conformance.Mandatory{}},
+			},
+		},
+	}
+	provCmd0.SetParent(cluster)
+
+	firstCmd := &matter.Command{
+		Name:        "FirstCmd",
+		ID:          matter.NewNumber(1),
+		Direction:   matter.InterfaceServer,
+		Response:    types.NewCustomDataType("SharedResponse", types.DataTypeRankScalar),
+		Conformance: conformance.Set{&conformance.Mandatory{}},
+		Fields: matter.FieldSet{
+			&matter.Field{
+				Name:        "Arg1",
+				ID:          matter.NewNumber(1),
+				Type:        types.NewDataType(types.BaseDataTypeUInt8, types.DataTypeRankScalar),
+				Conformance: conformance.Set{&conformance.Mandatory{}},
+			},
+		},
+	}
+	firstCmd.SetParent(cluster)
+
+	thirdCmd := &matter.Command{
+		Name:        "ThirdCmd",
+		ID:          matter.NewNumber(3),
+		Direction:   matter.InterfaceServer,
+		Response:    types.NewCustomDataType("ThirdResponse", types.DataTypeRankScalar),
+		Conformance: conformance.Set{&conformance.Mandatory{}},
+		Fields: matter.FieldSet{
+			&matter.Field{
+				Name:        "Arg3",
+				ID:          matter.NewNumber(1),
+				Type:        types.NewDataType(types.BaseDataTypeUInt8, types.DataTypeRankScalar),
+				Conformance: conformance.Set{&conformance.Mandatory{}},
+			},
+		},
+	}
+	thirdCmd.SetParent(cluster)
+
+	secondCmd := &matter.Command{
+		Name:        "SecondCmd",
+		ID:          matter.NewNumber(5),
+		Direction:   matter.InterfaceServer,
+		Response:    types.NewCustomDataType("SharedResponse", types.DataTypeRankScalar),
+		Conformance: conformance.Set{&conformance.Mandatory{}},
+		Fields: matter.FieldSet{
+			&matter.Field{
+				Name:        "Arg2",
+				ID:          matter.NewNumber(1),
+				Type:        types.NewDataType(types.BaseDataTypeUInt8, types.DataTypeRankScalar),
+				Conformance: conformance.Set{&conformance.Mandatory{}},
+			},
+		},
+	}
+	secondCmd.SetParent(cluster)
+
+	sharedResp := &matter.Command{
+		Name:        "SharedResponse",
+		ID:          matter.NewNumber(2),
+		Direction:   matter.InterfaceClient,
+		Conformance: conformance.Set{&conformance.Mandatory{}},
+		Fields: matter.FieldSet{
+			&matter.Field{
+				Name:        "RespField",
+				ID:          matter.NewNumber(1),
+				Type:        types.NewDataType(types.BaseDataTypeUInt8, types.DataTypeRankScalar),
+				Conformance: conformance.Set{&conformance.Mandatory{}},
+			},
+		},
+	}
+	sharedResp.SetParent(cluster)
+
+	thirdResp := &matter.Command{
+		Name:        "ThirdResponse",
+		ID:          matter.NewNumber(4),
+		Direction:   matter.InterfaceClient,
+		Conformance: conformance.Set{&conformance.Mandatory{}},
+		Fields: matter.FieldSet{
+			&matter.Field{
+				Name:        "ThirdRespField",
+				ID:          matter.NewNumber(1),
+				Type:        types.NewDataType(types.BaseDataTypeUInt8, types.DataTypeRankScalar),
+				Conformance: conformance.Set{&conformance.Mandatory{}},
+			},
+		},
+	}
+	thirdResp.SetParent(cluster)
+
+	specification.ClusterRefs.Add(cluster, provCmd0)
+	specification.ClusterRefs.Add(cluster, firstCmd)
+	specification.ClusterRefs.Add(cluster, thirdCmd)
+	specification.ClusterRefs.Add(cluster, secondCmd)
+	specification.ClusterRefs.Add(cluster, sharedResp)
+	specification.ClusterRefs.Add(cluster, thirdResp)
+
+	syntheticFile := &File{
+		EndpointTypes: []EndpointType{
+			{
+				ID:             0,
+				Name:           "Test Endpoint",
+				DeviceTypeCode: 1,
+				Clusters: []ClusterRef{
+					{
+						Code: 1,
+						Name: "TestCluster",
+						Side: "server",
+					},
+				},
+			},
+		},
+		Endpoints: []JSONEndpoint{
+			{
+				EndpointId:        0,
+				EndpointTypeIndex: 0,
+			},
+		},
+	}
+
+	input := pipeline.NewData("test.matter", syntheticFile)
+	ctx := context.Background()
+
+	for _, commandSet := range []matter.CommandSet{
+		// Test permutation 1: firstCmd (ID 1) appears before secondCmd (ID 5) in slice
+		{firstCmd, thirdCmd, secondCmd, sharedResp, thirdResp, provCmd0},
+		// Test permutation 2: secondCmd (ID 5) appears before firstCmd (ID 1) in slice
+		{secondCmd, thirdCmd, firstCmd, sharedResp, thirdResp, provCmd0},
+	} {
+		cluster.Commands = commandSet
+
+		renderer, err := NewIdlRenderer(specification)
+		if err != nil {
+			t.Fatalf("failed to create renderer: %v", err)
+		}
+		renderer.SuppressProvisional = "all"
+
+		outputs, _, err := renderer.Process(ctx, input, 0, 1)
+		if err != nil {
+			t.Fatalf("Process failed: %v", err)
+		}
+		if len(outputs) == 0 {
+			t.Fatalf("expected output, got none")
+		}
+
+		content := outputs[0].Content
+
+		idxFirstCmdReq := strings.Index(content, "request struct FirstCmdRequest")
+		idxSharedResp := strings.Index(content, "response struct SharedResponse")
+		idxThirdCmdReq := strings.Index(content, "request struct ThirdCmdRequest")
+		idxThirdResp := strings.Index(content, "response struct ThirdResponse")
+		idxSecondCmdReq := strings.Index(content, "request struct SecondCmdRequest")
+
+		if idxFirstCmdReq == -1 || idxSharedResp == -1 || idxThirdCmdReq == -1 || idxThirdResp == -1 || idxSecondCmdReq == -1 {
+			t.Fatalf("missing expected struct in rendered output: %s", content)
+		}
+
+		if !(idxFirstCmdReq < idxSharedResp && idxSharedResp < idxThirdCmdReq && idxThirdCmdReq < idxThirdResp && idxThirdResp < idxSecondCmdReq) {
+			t.Errorf("incorrect ordering in rendered output:\nFirstCmdReq: %d, SharedResp: %d, ThirdCmdReq: %d, ThirdResp: %d, SecondCmdReq: %d\nContent:\n%s",
+				idxFirstCmdReq, idxSharedResp, idxThirdCmdReq, idxThirdResp, idxSecondCmdReq, content)
+		}
+	}
+}
+
+func TestFieldTypeHelper(t *testing.T) {
+	renderer, err := NewIdlRenderer(nil)
+	if err != nil {
+		t.Fatalf("failed to create renderer: %v", err)
+	}
+
+	fieldChar := matter.Field{
+		Name:       "TestFieldChar",
+		Type:       types.NewDataType(types.BaseDataTypeString, types.DataTypeRankScalar),
+		Constraint: constraint.ParseString("256"),
+	}
+
+	fieldOctet := matter.Field{
+		Name:       "TestFieldOctet",
+		Type:       types.NewDataType(types.BaseDataTypeOctStr, types.DataTypeRankScalar),
+		Constraint: constraint.ParseString("256"),
+	}
+
+	// 1. KeepLongStrings = false (default behavior: remove long_)
+	renderer.KeepLongStrings = false
+	res := renderer.fieldTypeHelper(fieldChar, nil, nil)
+	if string(res) != "char_string" {
+		t.Errorf("expected fieldTypeHelper to return 'char_string' when KeepLongStrings=false, got '%s'", res)
+	}
+
+	res = renderer.fieldTypeHelper(fieldOctet, nil, nil)
+	if string(res) != "octet_string" {
+		t.Errorf("expected fieldTypeHelper to return 'octet_string' when KeepLongStrings=false, got '%s'", res)
+	}
+
+	// 2. KeepLongStrings = true (keep long_)
+	renderer.KeepLongStrings = true
+	res = renderer.fieldTypeHelper(fieldChar, nil, nil)
+	if string(res) != "long_char_string" {
+		t.Errorf("expected fieldTypeHelper to return 'long_char_string' when KeepLongStrings=true, got '%s'", res)
+	}
+
+	res = renderer.fieldTypeHelper(fieldOctet, nil, nil)
+	if string(res) != "long_octet_string" {
+		t.Errorf("expected fieldTypeHelper to return 'long_octet_string' when KeepLongStrings=true, got '%s'", res)
 	}
 }
