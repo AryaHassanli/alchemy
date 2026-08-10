@@ -794,4 +794,3 @@ func (mcee *MissingClonedEntityError) Origin() (path string, line int) {
 func (mcee *MissingClonedEntityError) Error() string {
 	return fmt.Sprintf("failed to find local clone of entity %s for field %s", matter.EntityName(mcee.Entity), mcee.Field.Name)
 }
-
