@@ -9,6 +9,10 @@ import (
 	"github.com/project-chip/alchemy/matter/types"
 )
 
+// ValidateEventConformances validates that all events in a Specification satisfy the Matter event conformance rules:
+//  1. An event SHALL be mandatory ("M") or mandated by the use of one or more FeatureMap bits (e.g. "VIS", "VIS & AUD", "VIS | AUD").
+//  2. Events SHALL be discoverable and therefore SHALL NOT be purely optional ("O") or conditionally optional (e.g. "[VIS]").
+//  3. Conformance annotations (such as Provisional "P", Deprecated "D", Disallowed "X", Obsolete, Described) are ignored during validation.
 func ValidateEventConformances(spec *Specification) (violations map[string][]Violation) {
 	return compareEventConformances(nil, spec)
 }
@@ -81,6 +85,15 @@ func compareEventConformances(base *Specification, head *Specification) (violati
 	return
 }
 
+// validateEventConformance checks a single Conformance object against the event conformance rules:
+//   - Blank conformance is rejected.
+//   - Conformance annotations (Provisional "P", Deprecated "D", Disallowed "X", Obsolete, Described) are filtered out.
+//   - If no conformance elements remain after filtering annotations, the conformance is rejected.
+//   - Purely optional ("O") or conditionally optional ("[...]") conformances are rejected.
+//   - Mandatory without expression ("M") is accepted.
+//   - Mandatory with expression (e.g. "VIS", "VIS & AUD") is recursively inspected to ensure every referenced
+//     identifier is a valid FeatureMap bit and no non-feature entities (attributes, numbers, etc.) are present.
+//   - Generic or unrecognized conformance structures are rejected.
 func validateEventConformance(con conformance.Conformance, isFeature func(id string) bool) error {
 	if con == nil || conformance.IsBlank(con) {
 		return errors.New("conformance cannot be blank")
