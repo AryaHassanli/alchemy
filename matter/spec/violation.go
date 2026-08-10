@@ -17,6 +17,8 @@ const (
 	ViolationNewParseError
 
 	ViolationMasterList
+
+	ViolationEventConformance
 )
 
 func (vt ViolationType) String() string {
@@ -41,6 +43,12 @@ func (vt ViolationType) String() string {
 			sb.WriteString(", ")
 		}
 		sb.WriteString("master-list-incompatible")
+	}
+	if (vt & ViolationEventConformance) != ViolationTypeNone {
+		if sb.Len() > 0 {
+			sb.WriteString(", ")
+		}
+		sb.WriteString("invalid-event-conformance")
 	}
 	return sb.String()
 }

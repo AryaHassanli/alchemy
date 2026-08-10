@@ -187,21 +187,22 @@ func validateEvents(spec *Specification) {
 		nu := make(nameUniqueness[*matter.Event])
 		cv := make(conformanceValidation)
 		for _, e := range c.Events {
-			idu.check(spec, e.ID, e)
-			nu.check(spec, e)
 			cv.add(e, e.Conformance)
-			validateFields(spec, e, e.Fields)
+			validateEvent(spec, e, idu, nu)
 		}
 		cv.check(spec)
 	}
 	idu := make(idUniqueness[*matter.Event])
 	nu := make(nameUniqueness[*matter.Event])
 	for obj := range spec.GlobalObjects {
-		switch e := obj.(type) {
-		case *matter.Event:
-			idu.check(spec, e.ID, e)
-			nu.check(spec, e)
-			validateFields(spec, e, e.Fields)
+		if e, ok := obj.(*matter.Event); ok {
+			validateEvent(spec, e, idu, nu)
 		}
 	}
+}
+
+func validateEvent(spec *Specification, e *matter.Event, idu idUniqueness[*matter.Event], nu nameUniqueness[*matter.Event]) {
+	idu.check(spec, e.ID, e)
+	nu.check(spec, e)
+	validateFields(spec, e, e.Fields)
 }
