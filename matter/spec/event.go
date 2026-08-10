@@ -11,7 +11,6 @@ import (
 	"github.com/project-chip/alchemy/internal/suggest"
 	"github.com/project-chip/alchemy/internal/text"
 	"github.com/project-chip/alchemy/matter"
-	"github.com/project-chip/alchemy/matter/conformance"
 	"github.com/project-chip/alchemy/matter/types"
 )
 
@@ -187,16 +186,9 @@ func validateEvents(spec *Specification) {
 		idu := make(idUniqueness[*matter.Event])
 		nu := make(nameUniqueness[*matter.Event])
 		cv := make(conformanceValidation)
-		var isFeature func(id string) bool
-		if c.Features != nil {
-			isFeature = func(id string) bool {
-				ent, ok := c.Features.Identifier(id)
-				return ok && ent != nil && ent.EntityType() == types.EntityTypeFeature
-			}
-		}
 		for _, e := range c.Events {
 			cv.add(e, e.Conformance)
-			validateEvent(spec, e, isFeature, idu, nu)
+			validateEvent(spec, e, idu, nu)
 		}
 		cv.check(spec)
 	}
@@ -204,16 +196,13 @@ func validateEvents(spec *Specification) {
 	nu := make(nameUniqueness[*matter.Event])
 	for obj := range spec.GlobalObjects {
 		if e, ok := obj.(*matter.Event); ok {
-			validateEvent(spec, e, nil, idu, nu)
+			validateEvent(spec, e, idu, nu)
 		}
 	}
 }
 
-func validateEvent(spec *Specification, e *matter.Event, isFeature func(id string) bool, idu idUniqueness[*matter.Event], nu nameUniqueness[*matter.Event]) {
+func validateEvent(spec *Specification, e *matter.Event, idu idUniqueness[*matter.Event], nu nameUniqueness[*matter.Event]) {
 	idu.check(spec, e.ID, e)
 	nu.check(spec, e)
-	if err := conformance.ValidateEventConformance(e.Conformance, isFeature); err != nil {
-		spec.addError(&InvalidEventConformanceError{Event: e, Conformance: e.Conformance, Reason: err.Error()})
-	}
 	validateFields(spec, e, e.Fields)
 }

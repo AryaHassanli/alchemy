@@ -92,7 +92,7 @@ func NewFeature(source asciidoc.Element, bit string, name string, code string, s
 	return &Feature{BitmapBit: BitmapBit{entity: entity{source: source}, bit: bit, name: name, summary: summary, conformance: conformance}, Code: code}
 }
 
-func (f *Feature) Entity() types.EntityType {
+func (f *Feature) EntityType() types.EntityType {
 	return types.EntityTypeFeature
 }
 

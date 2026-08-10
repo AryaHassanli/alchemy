@@ -128,7 +128,9 @@ func (c *MergeGuard) Run(cc *cli.Context) (err error) {
 		return fmt.Errorf("failed checking Master List Enforcer status: %v", err)
 	}
 
-	violations := spec.MergeViolations(vp, ve, vm)
+	var vev map[string][]spec.Violation = spec.ProcessEventConformanceComparison(&specs)
+
+	violations := spec.MergeViolations(vp, ve, vm, vev)
 
 	owner, repo := githubContext.Repo()
 
@@ -205,6 +207,9 @@ func (c *MergeGuard) Run(cc *cli.Context) (err error) {
 				}
 				if v.Type.Has(spec.ViolationMasterList) {
 					vv.Violations = append(vv.Violations, "Incompatible with Master List: "+v.Text)
+				}
+				if v.Type.Has(spec.ViolationEventConformance) {
+					vv.Violations = append(vv.Violations, "Invalid event conformance: "+v.Text)
 				}
 				vf.Violations = append(vf.Violations, vv)
 			}
