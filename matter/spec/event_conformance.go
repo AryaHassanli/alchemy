@@ -1,6 +1,7 @@
 package spec
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/project-chip/alchemy/matter"
@@ -41,7 +42,7 @@ func compareEventConformances(base *Specification, head *Specification) (violati
 		}
 		baseCluster := findBaseCluster(base, c)
 		for _, e := range c.Events {
-			if err := conformance.ValidateEventConformance(e.Conformance, isFeature); err != nil {
+			if err := validateEventConformance(e.Conformance, isFeature); err != nil {
 				baseEvent := findBaseEvent(baseCluster, e)
 				if baseEventHadViolation(baseCluster, baseEvent) {
 					continue
@@ -60,7 +61,7 @@ func compareEventConformances(base *Specification, head *Specification) (violati
 	}
 	for obj := range head.GlobalObjects {
 		if e, ok := obj.(*matter.Event); ok {
-			if err := conformance.ValidateEventConformance(e.Conformance, nil); err != nil {
+			if err := validateEventConformance(e.Conformance, nil); err != nil {
 				baseEvent := findBaseGlobalEvent(base, e)
 				if baseEventHadViolation(nil, baseEvent) {
 					continue
@@ -78,6 +79,120 @@ func compareEventConformances(base *Specification, head *Specification) (violati
 		}
 	}
 	return
+}
+
+func validateEventConformance(con conformance.Conformance, isFeature func(id string) bool) error {
+	if con == nil || conformance.IsBlank(con) {
+		return errors.New("conformance cannot be blank")
+	}
+
+	var nonAnnotations []conformance.Conformance
+	switch c := con.(type) {
+	case conformance.Set:
+		nonAnnotations = make([]conformance.Conformance, 0, len(c))
+		for _, el := range c {
+			if !isAnnotation(el) {
+				nonAnnotations = append(nonAnnotations, el)
+			}
+		}
+	default:
+		if !isAnnotation(con) {
+			nonAnnotations = append(nonAnnotations, con)
+		}
+	}
+
+	if len(nonAnnotations) == 0 {
+		return errors.New("conformance must be mandatory or mandated by a feature bit")
+	}
+
+	for _, el := range nonAnnotations {
+		switch c := el.(type) {
+		case *conformance.Optional:
+			if c.Expression == nil && c.Choice == nil {
+				return errors.New("conformance is purely optional")
+			}
+			hasFeature, _ := inspectFeatures(c.Expression, isFeature)
+			if hasFeature {
+				return errors.New("conformance is tied to a feature bit but is optional")
+			}
+			return errors.New("conformance could be optional")
+
+		case *conformance.Mandatory:
+			if c.Expression == nil {
+				continue
+			}
+			hasFeature, hasNonFeature := inspectFeatures(c.Expression, isFeature)
+			if !hasFeature || hasNonFeature {
+				return errors.New("conformance is not tied to a feature bit")
+			}
+
+		case *conformance.Generic:
+			return fmt.Errorf("conformance expression is not valid: %s", c.ASCIIDocString())
+
+		default:
+			return errors.New("conformance is not tied to a feature bit")
+		}
+	}
+
+	return nil
+}
+
+func isAnnotation(con conformance.Conformance) bool {
+	switch con.(type) {
+	case *conformance.Provisional, *conformance.Deprecated, *conformance.Disallowed, *conformance.Obsolete, *conformance.Described:
+		return true
+	}
+	return false
+}
+
+func inspectFeatures(node any, isFeature func(id string) bool) (hasFeature, hasNonFeature bool) {
+	if node == nil {
+		return false, false
+	}
+	switch n := node.(type) {
+	case *conformance.IdentifierExpression:
+		return checkIdentifier(n.Entity, n.ID, n.Field, isFeature)
+	case *conformance.ReferenceExpression:
+		return checkIdentifier(n.Entity, n.Reference, n.Field, isFeature)
+	case *conformance.IdentifierValue:
+		return checkIdentifier(n.Entity, n.ID, n.Field, isFeature)
+	case *conformance.ReferenceValue:
+		return checkIdentifier(n.Entity, n.Reference, n.Field, isFeature)
+	case *conformance.LogicalExpression:
+		hasFeature, hasNonFeature = inspectFeatures(n.Left, isFeature)
+		for _, r := range n.Right {
+			rFeat, rNon := inspectFeatures(r, isFeature)
+			hasFeature = hasFeature || rFeat
+			hasNonFeature = hasNonFeature || rNon
+		}
+	case *conformance.EqualityExpression:
+		lFeat, lNon := inspectFeatures(n.Left, isFeature)
+		rFeat, rNon := inspectFeatures(n.Right, isFeature)
+		return lFeat || rFeat, lNon || rNon
+	case *conformance.ComparisonExpression:
+		lFeat, lNon := inspectFeatures(n.Left, isFeature)
+		rFeat, rNon := inspectFeatures(n.Right, isFeature)
+		return lFeat || rFeat, lNon || rNon
+	case *conformance.MathOperation:
+		lFeat, lNon := inspectFeatures(n.Left, isFeature)
+		rFeat, rNon := inspectFeatures(n.Right, isFeature)
+		return lFeat || rFeat, lNon || rNon
+	}
+	return hasFeature, hasNonFeature
+}
+
+func checkIdentifier(entity types.Entity, id string, field conformance.ComparisonValue, isFeature func(string) bool) (hasFeature, hasNonFeature bool) {
+	if (entity != nil && entity.EntityType() == types.EntityTypeFeature) || (isFeature != nil && isFeature(id)) {
+		hasFeature = true
+	} else {
+		hasNonFeature = true
+	}
+	if field != nil {
+		fFeat, fNon := inspectFeatures(field, isFeature)
+		hasFeature = hasFeature || fFeat
+		hasNonFeature = hasNonFeature || fNon
+	}
+	return hasFeature, hasNonFeature
 }
 
 func findBaseCluster(base *Specification, headCluster *matter.Cluster) *matter.Cluster {
@@ -142,5 +257,5 @@ func baseEventHadViolation(baseCluster *matter.Cluster, baseEvent *matter.Event)
 			return isFeat || ent.EntityType() == types.EntityTypeFeature
 		}
 	}
-	return conformance.ValidateEventConformance(baseEvent.Conformance, isFeature) != nil
+	return validateEventConformance(baseEvent.Conformance, isFeature) != nil
 }
