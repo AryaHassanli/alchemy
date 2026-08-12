@@ -31,9 +31,22 @@ func renderInternalCrossReference(cxt Target, cf *asciidoc.CrossReference) (err 
 		}
 
 		cxt.WriteRune('[')
-		err = Elements(cxt, "", cf.Children()...)
-		if err != nil {
-			return
+		hasChildren := !cf.Elements.IsWhitespace()
+		if hasChildren {
+			err = Elements(cxt, "", cf.Children()...)
+			if err != nil {
+				return
+			}
+		}
+		attributes := cf.Attributes()
+		for i, a := range attributes {
+			if i > 0 || hasChildren {
+				cxt.WriteRune(',')
+			}
+			err = renderInlineAttribute(cxt, a)
+			if err != nil {
+				return
+			}
 		}
 		cxt.WriteRune(']')
 	}

@@ -187,36 +187,7 @@ func renderSelectAttributes(cxt Target, attributes []asciidoc.Attribute, include
 				if i > 0 {
 					cxt.WriteRune(',')
 				}
-				switch ia := ia.(type) {
-				case *asciidoc.NamedAttribute:
-					var s string
-					s, err = quoteAttributeValue(ia.Value())
-					if err != nil {
-						return
-					}
-					cxt.WriteString(string(ia.Name))
-					cxt.WriteString("=")
-					var quoteType string
-					switch ia.QuoteType() {
-					case asciidoc.AttributeQuoteTypeDouble:
-						quoteType = "\""
-					case asciidoc.AttributeQuoteTypeSingle:
-						quoteType = "'"
-					}
-					cxt.WriteString(quoteType)
-					cxt.WriteString(s)
-					cxt.WriteString(quoteType)
-				case *asciidoc.PositionalAttribute:
-					err = renderNakedAttributeValue(cxt, ia.Value())
-				case *asciidoc.TableColumnsAttribute:
-					cxt.WriteString("cols=\"")
-					cxt.WriteString(ia.AsciiDocString())
-					cxt.WriteString("\"")
-				case *asciidoc.ShorthandAttribute:
-					cxt.WriteString(ia.AsciiDocString())
-				default:
-					err = fmt.Errorf("unexpected inline attribute type: %T", ia)
-				}
+				err = renderInlineAttribute(cxt, ia)
 				if err != nil {
 					return
 				}
@@ -232,6 +203,40 @@ func renderSelectAttributes(cxt Target, attributes []asciidoc.Attribute, include
 			return
 		}
 
+	}
+	return
+}
+
+func renderInlineAttribute(cxt Target, ia asciidoc.Attribute) (err error) {
+	switch ia := ia.(type) {
+	case *asciidoc.NamedAttribute:
+		var s string
+		s, err = quoteAttributeValue(ia.Value())
+		if err != nil {
+			return
+		}
+		cxt.WriteString(string(ia.Name))
+		cxt.WriteString("=")
+		var quoteType string
+		switch ia.QuoteType() {
+		case asciidoc.AttributeQuoteTypeDouble:
+			quoteType = "\""
+		case asciidoc.AttributeQuoteTypeSingle:
+			quoteType = "'"
+		}
+		cxt.WriteString(quoteType)
+		cxt.WriteString(s)
+		cxt.WriteString(quoteType)
+	case *asciidoc.PositionalAttribute:
+		err = renderNakedAttributeValue(cxt, ia.Value())
+	case *asciidoc.TableColumnsAttribute:
+		cxt.WriteString("cols=\"")
+		cxt.WriteString(ia.AsciiDocString())
+		cxt.WriteString("\"")
+	case *asciidoc.ShorthandAttribute:
+		cxt.WriteString(ia.AsciiDocString())
+	default:
+		err = fmt.Errorf("unexpected inline attribute type: %T", ia)
 	}
 	return
 }
