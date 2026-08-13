@@ -87,10 +87,10 @@ func Check(spec *spec.Specification, entity types.Entity, originalEntity types.E
 		b := Check(spec, entity.Parent(), originalEntity)
 		return b
 
-	case *matter.Enum, *matter.Bitmap, *matter.Struct:
+	case *matter.Enum, *matter.Bitmap, *matter.Struct, *matter.TypeDef:
 		refs, ok := spec.DataTypeRefs.Get(entity)
 		if !ok || refs.Size() == 0 {
-			if e, ok := entity.(*matter.Bitmap); ok && e.Name == "Features" {
+			if e, ok := entity.(*matter.Bitmap); ok && (e.Name == "Features" || e.Name == "Feature") {
 				if parentCluster, ok := entity.Parent().(*matter.Cluster); ok {
 					return Check(spec, parentCluster.Features, originalEntity)
 				}

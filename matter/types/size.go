@@ -3,7 +3,7 @@ package types
 func (dt *DataType) Size() int {
 
 	switch dt.BaseType {
-	case BaseDataTypeBoolean, BaseDataTypeMap8, BaseDataTypeUInt8, BaseDataTypeInt8, BaseDataTypeEnum8, BaseDataTypePercent, BaseDataTypePriority, BaseDataTypeStatus:
+	case BaseDataTypeBoolean, BaseDataTypeMap8, BaseDataTypeUInt8, BaseDataTypeInt8, BaseDataTypeEnum8, BaseDataTypePercent, BaseDataTypePriority, BaseDataTypeStatus, BaseDataTypeMediumType:
 		return 1
 	case BaseDataTypeMap16, BaseDataTypeUInt16, BaseDataTypeInt16, BaseDataTypeEnum16, BaseDataTypePercentHundredths, BaseDataTypeGroupID, BaseDataTypeEndpointID, BaseDataTypeEndpointNumber, BaseDataTypeVendorID:
 		return 2
@@ -51,6 +51,8 @@ func (dt *DataType) Size() int {
 		return 4
 	case BaseDataTypeIPv6Address, BaseDataTypeMessageID:
 		return 16
+	case BaseDataTypeIPv6Prefix:
+		return 254
 	case BaseDataTypeSemanticTag:
 		return 4
 	case BaseDataTypeNamespaceID:

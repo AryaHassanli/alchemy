@@ -285,6 +285,8 @@ func DataTypeName(dataType *types.DataType) string {
 		return "octet_string"
 	case types.BaseDataTypeStatus:
 		return "status"
+	case types.BaseDataTypeMediumType:
+		return "medium_type"
 	}
 	return dataType.Name
 }
@@ -473,6 +475,12 @@ func FieldToZapDataType(fs matter.FieldSet, f *matter.Field, constraint constrai
 	if f.Type.BaseType == types.BaseDataTypeOctStr && maxOver255Bytes(fs, f, constraint) {
 		// Special case; needs to be long_octet_string if over 255
 		return "long_octet_string"
+	}
+	if f.Type.BaseType == types.BaseDataTypeTag {
+		switch f.Type.Entity.(type) {
+		case *matter.Namespace:
+			return f.Name + "Tag"
+		}
 	}
 	if f.Type.IsArray() {
 		return DataTypeName(f.Type.EntryType)

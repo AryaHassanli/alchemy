@@ -22,7 +22,11 @@ func (p DeviceTypesPatcher) applyDeviceTypeToElement(spec *spec.Specification, d
 	setDeviceTypeName(spec, dte, deviceType, errata)
 	xml.SetOrCreateSimpleElement(dte, "domain", "CHIP", "name")
 	xml.SetOrCreateSimpleElement(dte, "typeName", errata.OverrideDeviceType(deviceType, deviceType.Name), "name", "domain")
-	xml.SetOrCreateSimpleElement(dte, "profileId", "0x0103", "name", "domain", "typeName").CreateAttr("editable", "false")
+	profileID := deviceType.ProfileID
+	if profileID == "" {
+		profileID = "0x0103"
+	}
+	xml.SetOrCreateSimpleElement(dte, "profileId", profileID, "name", "domain", "typeName").CreateAttr("editable", "false")
 	xml.SetOrCreateSimpleElement(dte, "deviceId", deviceType.ID.HexString(), "name", "domain", "typeName", "profileId").CreateAttr("editable", "false")
 	mostRecentRevision := deviceType.Revisions.MostRecent()
 	if mostRecentRevision != nil {

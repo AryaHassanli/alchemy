@@ -14,6 +14,7 @@ type SDK struct {
 	ClusterName                  string              `yaml:"cluster-name,omitempty"`
 	ClusterAliases               map[string][]string `yaml:"cluster-aliases,omitempty"`
 	ClusterListKeys              map[string]string   `yaml:"cluster-list-keys,omitempty"`
+	Domain                       string              `yaml:"domain,omitempty"`
 
 	WritePrivilegeAsRole bool `yaml:"write-privilege-as-role,omitempty"`
 
@@ -86,11 +87,15 @@ type SDKTypes struct {
 }
 
 type SDKType struct {
-	Type         string `yaml:"type,omitempty"`
-	Name         string `yaml:"name,omitempty"`
-	OverrideName string `yaml:"override-name,omitempty"`
-	OverrideType string `yaml:"override-type,omitempty"`
-	List         bool   `yaml:"list,omitempty"`
+	Type              string `yaml:"type,omitempty"`
+	Name              string `yaml:"name,omitempty"`
+	OverrideName      string `yaml:"override-name,omitempty"`
+	OverrideType      string `yaml:"override-type,omitempty"`
+	OverrideProfileID string `yaml:"override-profile-id,omitempty"`
+	List              bool   `yaml:"list,omitempty"`
+	Keep              bool   `yaml:"keep,omitempty"`
+	ForceGlobal       bool   `yaml:"force-global,omitempty"`
+	ForceLocal        bool   `yaml:"force-local,omitempty"`
 
 	Fields      []*SDKType `yaml:"fields,omitempty"`
 	ExtraFields []*SDKType `yaml:"extra-fields,omitempty"`
@@ -106,23 +111,26 @@ type SDKType struct {
 	Conformance string `yaml:"conformance,omitempty"`
 	Fallback    string `yaml:"fallback,omitempty"`
 
-	Quality       string `yaml:"quality,omitempty"`
-	Access        string `yaml:"access,omitempty"`
-	Direction     string `yaml:"direction,omitempty"`
-	FabricScoping string `yaml:"fabric-scoping,omitempty"`
+	Quality           string `yaml:"quality,omitempty"`
+	Access            string `yaml:"access,omitempty"`
+	Direction         string `yaml:"direction,omitempty"`
+	Response          string `yaml:"response,omitempty"`
+	FabricScoping     string `yaml:"fabric-scoping,omitempty"`
+	FabricSensitivity string `yaml:"fabric-sensitivity,omitempty"`
 
 	Attributes map[string]*SDKType `yaml:"attributes,omitempty"`
 	Commands   map[string]*SDKType `yaml:"commands,omitempty"`
+	Events     map[string]*SDKType `yaml:"events,omitempty"`
 }
 
 type SDKTypeCollection map[string]*SDKType
 
 func (zap *SDK) OverrideDeviceTypeName(deviceType *matter.DeviceType, defaultName string) string {
-	if zap.Types == nil {
+	if zap == nil || zap.Types == nil {
 		return defaultName
 	}
 	if zap.Types.DeviceTypes != nil {
-		if override, ok := zap.Types.DeviceTypes[deviceType.Name]; ok && override.OverrideName != "" {
+		if override, ok := zap.Types.DeviceTypes[deviceType.Name]; ok && override != nil && override.OverrideName != "" {
 			return override.OverrideName
 		}
 	}
@@ -130,11 +138,11 @@ func (zap *SDK) OverrideDeviceTypeName(deviceType *matter.DeviceType, defaultNam
 }
 
 func (zap *SDK) OverrideDeviceType(deviceType *matter.DeviceType, defaultTypeName string) string {
-	if zap.Types == nil {
+	if zap == nil || zap.Types == nil {
 		return defaultTypeName
 	}
 	if zap.Types.DeviceTypes != nil {
-		if override, ok := zap.Types.DeviceTypes[deviceType.Name]; ok && override.OverrideType != "" {
+		if override, ok := zap.Types.DeviceTypes[deviceType.Name]; ok && override != nil && override.OverrideType != "" {
 			return override.OverrideType
 		}
 	}

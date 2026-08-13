@@ -60,6 +60,7 @@ const (
 	BaseDataTypeEnum16
 	BaseDataTypePriority
 	BaseDataTypeStatus
+	BaseDataTypeMediumType
 
 	BaseDataTypeGroupID
 	BaseDataTypeEndpointID
@@ -132,6 +133,16 @@ func (bdt BaseDataType) IsSimple() bool {
 		BaseDataTypeInt8, BaseDataTypeInt16, BaseDataTypeInt24, BaseDataTypeInt32,
 		BaseDataTypeInt40, BaseDataTypeInt48, BaseDataTypeInt56, BaseDataTypeInt64,
 		BaseDataTypeString:
+		return true
+	}
+	return false
+}
+
+func (bdt BaseDataType) HasLength() bool {
+	switch bdt {
+	case BaseDataTypeString,
+		BaseDataTypeOctStr,
+		BaseDataTypeMessageID:
 		return true
 	}
 	return false
@@ -247,6 +258,8 @@ func BaseDataTypeName(baseDataType BaseDataType) string {
 		return "priority"
 	case BaseDataTypeStatus:
 		return "status"
+	case BaseDataTypeMediumType:
+		return "medium-type"
 	case BaseDataTypeGroupID:
 		return "group-id"
 	case BaseDataTypeEndpointID:

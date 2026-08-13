@@ -11,9 +11,6 @@ import (
 
 func renderConformance(spec *spec.Specification, entity types.Entity, c conformance.Conformance, parent *etree.Element, alternatives ...string) error {
 	removeConformance(parent)
-	if conformance.IsMandatory(c) && !conformance.IsProvisional(c) {
-		return nil
-	}
 	conformanceElement, err := dm.CreateConformanceElement(c, nil)
 	if err != nil {
 		return err

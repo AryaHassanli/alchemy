@@ -20,6 +20,8 @@ type DeviceType struct {
 	Class      string `json:"class,omitempty"`
 	Scope      string `json:"scope,omitempty"`
 
+	ProfileID string `json:"profileId,omitempty"`
+
 	SubsetDeviceType *DeviceType `json:"-"`
 
 	Conditions []*Condition `json:"conditions,omitempty"`
@@ -37,7 +39,7 @@ type DeviceType struct {
 }
 
 func NewDeviceType(source asciidoc.Element) *DeviceType {
-	return &DeviceType{entity: entity{source: source}}
+	return &DeviceType{entity: entity{source: source}, ProfileID: "0x0103"}
 }
 
 func (dt *DeviceType) EntityType() types.EntityType {

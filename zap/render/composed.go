@@ -202,8 +202,8 @@ func getConformanceState(cxt conformance.Context, clusterRequirements []*matter.
 	}
 
 	switch req.Origin {
-	case matter.RequirementOriginBaseDeviceType, matter.RequirementOriginSubsetDeviceType:
-		// Normally, we do not include clusters from the Base Device Type or subset device types...
+	case matter.RequirementOriginSubsetDeviceType:
+		// Normally, we do not include clusters from subset device types...
 
 		var hasElements bool
 		ers := elementRequirements[req.ClusterRequirement.Cluster]

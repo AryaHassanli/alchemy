@@ -1,0 +1,26 @@
+package idl
+
+import (
+	"slices"
+	"strings"
+
+	"github.com/mailgun/raymond/v2"
+	"github.com/project-chip/alchemy/matter"
+	"github.com/project-chip/alchemy/matter/spec"
+)
+
+func enumsHelper(spec *spec.Specification, filter ProvisionalFilter) func(enums matter.EnumSet, options *raymond.Options) raymond.SafeString {
+	return func(enums matter.EnumSet, options *raymond.Options) raymond.SafeString {
+		sortedEnums := make(matter.EnumSet, len(enums))
+		copy(sortedEnums, enums)
+		slices.SortStableFunc(sortedEnums, func(a *matter.Enum, b *matter.Enum) int {
+			return strings.Compare(a.Name, b.Name)
+		})
+		for _, en := range sortedEnums {
+			slices.SortStableFunc(en.Values, func(a *matter.EnumValue, b *matter.EnumValue) int {
+				return a.Value.Compare(b.Value)
+			})
+		}
+		return enumerateEntitiesHelper(sortedEnums, spec, filter, options)
+	}
+}
