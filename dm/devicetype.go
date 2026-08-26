@@ -258,9 +258,10 @@ func renderDeviceType(deviceType *matter.DeviceType) (output string, err error) 
 					location = baseDtr.deviceRequirements[0].Location
 				}
 			}
-			if location != matter.DeviceTypeRequirementLocationUnknown {
-				dte.CreateAttr("deviceTypeLocation", location.String())
+			if location == matter.DeviceTypeRequirementLocationUnknown {
+				location = matter.DeviceTypeRequirementLocationChildEndpoint
 			}
+			dte.CreateAttr("deviceTypeLocation", location.String())
 			
 			var baseConformance conformance.Set
 			for _, dr := range deviceType.DeviceTypeRequirements {
